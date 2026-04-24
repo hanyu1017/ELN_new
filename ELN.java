@@ -25,9 +25,10 @@ public class PMS435 extends FubonWmsBizLogic {
     //   0  債券代號   1  交易日      2  UF%     3  IB       4  商品類型
     //   5  天期(月)   6  幣別        7  標的1    8  標的1進場價  9  標的2
     //  10  標的2進場  11 標的3      12 標的3進場  13 標的4   14 標的4進場
-    //  15  標的5     16 標的5進場   17 收益率(%)  18 閉鎖期(NC_M)  19 KO價格(%)
+    //  15  標的5     16 標的5進場   17 收益率(%)  18 履約條件(KO)執行價%  19 KO價格(%)
     //  20  KO類型    21 KI價格(%)   22 KI類型    23 發行日   24 最後評價日
     //  25  到期日    26 理專
+    // ※ 閉鎖期(LOCKOUT_PERIOD) 不在 CSV 中，null = 由交易日起監控
     // =========================================================
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void importCSV(Object body, IPrimitiveMap header) throws JBranchException {
@@ -125,7 +126,7 @@ public class PMS435 extends FubonWmsBizLogic {
         params.put("tenor",         safeGet(cols, 5));
         params.put("currency",      safeGet(cols, 6));
         params.put("yieldPct",      toDouble(safeGet(cols, 17)));
-        params.put("lockoutPeriod", safeGet(cols, 18));
+        params.put("strikePrice",   toDouble(safeGet(cols, 18)));  // 履約條件(KO) 執行價%
         params.put("koPrice",       toDouble(safeGet(cols, 19)));
         params.put("koType",        safeGet(cols, 20));
         params.put("kiPrice",       toDouble(safeGet(cols, 21)));
@@ -145,7 +146,7 @@ public class PMS435 extends FubonWmsBizLogic {
         mergeSql.append("  TENOR                = :tenor, ");
         mergeSql.append("  CURRENCY             = :currency, ");
         mergeSql.append("  YIELD_PCT            = :yieldPct, ");
-        mergeSql.append("  LOCKOUT_PERIOD       = :lockoutPeriod, ");
+        mergeSql.append("  STRIKE_PRICE         = :strikePrice, ");
         mergeSql.append("  KO_PRICE             = :koPrice, ");
         mergeSql.append("  KO_TYPE              = :koType, ");
         mergeSql.append("  KI_PRICE             = :kiPrice, ");
@@ -155,11 +156,11 @@ public class PMS435 extends FubonWmsBizLogic {
         mergeSql.append("  MATURITY_DATE        = ").append(sMaturityDate).append(" ");
         mergeSql.append("WHEN NOT MATCHED THEN INSERT ");
         mergeSql.append("  (BOND_ID, TRADE_DATE, UF_PCT, IB, PROD_TYPE, TENOR, CURRENCY, ");
-        mergeSql.append("   YIELD_PCT, LOCKOUT_PERIOD, KO_PRICE, KO_TYPE, KI_PRICE, KI_TYPE, ");
+        mergeSql.append("   YIELD_PCT, STRIKE_PRICE, KO_PRICE, KO_TYPE, KI_PRICE, KI_TYPE, ");
         mergeSql.append("   ISSUE_DATE, FINAL_VALUATION_DATE, MATURITY_DATE) ");
         mergeSql.append("VALUES ");
         mergeSql.append("  (:bondId, ").append(sTradeDate).append(", :ufPct, :ib, :prodType, :tenor, :currency, ");
-        mergeSql.append("   :yieldPct, :lockoutPeriod, :koPrice, :koType, :kiPrice, :kiType, ");
+        mergeSql.append("   :yieldPct, :strikePrice, :koPrice, :koType, :kiPrice, :kiType, ");
         mergeSql.append("   ").append(sIssueDate).append(", ").append(sFinalValDate).append(", ").append(sMaturityDate).append(")");
 
         this.exeUpdateForMap(mergeSql.toString(), params);
@@ -330,15 +331,9 @@ public class PMS435 extends FubonWmsBizLogic {
             StringBuilder sb = new StringBuilder();
 
             // CTE 1：計算每標的的 KI/KO 首次觸發日（動態比對 ELN_PRICE_HISTORY）
-            // 監控起算日邏輯：
-            //   LOCKOUT_PERIOD 有 NC_M（N > 0） → ADD_MONTHS(ISSUE_DATE, N)
-            //   LOCKOUT_PERIOD 空白或 NC0M      → NVL(TRADE_DATE, ISSUE_DATE)
-            String monitorStart =
-                "CASE WHEN REGEXP_LIKE(TRIM(p.LOCKOUT_PERIOD),'^NC[0-9]+M$') " +
-                "          AND p.ISSUE_DATE IS NOT NULL " +
-                "          AND TO_NUMBER(REGEXP_SUBSTR(TRIM(p.LOCKOUT_PERIOD),'[0-9]+')) > 0 " +
-                "     THEN ADD_MONTHS(p.ISSUE_DATE, TO_NUMBER(REGEXP_SUBSTR(TRIM(p.LOCKOUT_PERIOD),'[0-9]+')))" +
-                "     ELSE NVL(p.TRADE_DATE, p.ISSUE_DATE) END";
+            // 監控起算日：NVL(TRADE_DATE, ISSUE_DATE)
+            // ※ LOCKOUT_PERIOD（閉鎖期）欄位需執行 ALTER TABLE 新增後才會納入計算
+            String monitorStart = "NVL(p.TRADE_DATE, p.ISSUE_DATE)";
 
             sb.append("WITH UnderlyingDetails AS ( ");
             sb.append("  SELECT ");
@@ -376,19 +371,14 @@ public class PMS435 extends FubonWmsBizLogic {
             sb.append("  p.BOND_ID, ");
             sb.append("  TO_CHAR(p.TRADE_DATE,'yyyy-MM-dd')            AS TRADE_DATE, ");
             sb.append("  p.PROD_TYPE, p.IB, p.CURRENCY, p.TENOR, p.UF_PCT, ");
-            sb.append("  p.STRIKE_PRICE, p.KO_PRICE, p.KO_TYPE, p.LOCKOUT_PERIOD, ");
+            sb.append("  p.STRIKE_PRICE, p.KO_PRICE, p.KO_TYPE, ");
             sb.append("  p.YIELD_PCT, p.KI_PRICE, p.KI_TYPE, ");
             sb.append("  TO_CHAR(p.ISSUE_DATE,'yyyy-MM-dd')            AS ISSUE_DATE, ");
             sb.append("  TO_CHAR(p.FINAL_VALUATION_DATE,'yyyy-MM-dd')  AS FINAL_VALUATION_DATE, ");
             sb.append("  TO_CHAR(p.MATURITY_DATE,'yyyy-MM-dd')         AS MATURITY_DATE, ");
-            // 閉鎖期狀態：由 LOCKOUT_PERIOD 判斷（已到期 > 閉鎖中 > 觀察中）
+            // 閉鎖狀態：已到期 / 觀察中（閉鎖中需 LOCKOUT_PERIOD 欄位，待 ALTER TABLE 後啟用）
             sb.append("  CASE ");
             sb.append("    WHEN p.MATURITY_DATE IS NOT NULL AND SYSDATE > p.MATURITY_DATE THEN '已到期' ");
-            sb.append("    WHEN REGEXP_LIKE(TRIM(p.LOCKOUT_PERIOD),'^NC[0-9]+M$') ");
-            sb.append("         AND p.ISSUE_DATE IS NOT NULL ");
-            sb.append("         AND TO_NUMBER(REGEXP_SUBSTR(TRIM(p.LOCKOUT_PERIOD),'[0-9]+')) > 0 ");
-            sb.append("         AND SYSDATE < ADD_MONTHS(p.ISSUE_DATE, TO_NUMBER(REGEXP_SUBSTR(TRIM(p.LOCKOUT_PERIOD),'[0-9]+'))) ");
-            sb.append("    THEN '閉鎖中' ");
             sb.append("    ELSE '觀察中' ");
             sb.append("  END AS LOCKOUT_STATUS, ");
             // 理專（scalar subquery 避免 LISTAGG GROUP BY 膨脹）
