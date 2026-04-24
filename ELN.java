@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.math.BigDecimal;
 
 @Component("pms435")
 @Scope("prototype")
@@ -125,13 +126,13 @@ public class PMS435 extends FubonWmsBizLogic {
         params.put("prodType",      safeGet(cols, 4));
         params.put("tenor",         safeGet(cols, 5));
         params.put("currency",      safeGet(cols, 6));
-        params.put("yieldPct",      toDouble(safeGet(cols, 17)));
-        params.put("strikePrice",   toDouble(safeGet(cols, 18)));  // 履約條件(KO) 執行價%
-        params.put("koPrice",       toDouble(safeGet(cols, 19)));
+        params.put("yieldPct",      toDecimal(safeGet(cols, 17)));
+        params.put("strikePrice",   toDecimal(safeGet(cols, 18)));  // 履約條件(KO) 執行價%
+        params.put("koPrice",       toDecimal(safeGet(cols, 19)));
         params.put("koType",        safeGet(cols, 20));
-        params.put("kiPrice",       toDouble(safeGet(cols, 21)));
+        params.put("kiPrice",       toDecimal(safeGet(cols, 21)));
         params.put("kiType",        safeGet(cols, 22));
-        params.put("ufPct",         toDouble(safeGet(cols, 2)));
+        params.put("ufPct",         toDecimal(safeGet(cols, 2)));
 
         // ── MERGE INTO ELN_PRODUCT ───────────────────────────
         StringBuilder mergeSql = new StringBuilder();
@@ -453,10 +454,17 @@ public class PMS435 extends FubonWmsBizLogic {
         return cols[idx] == null ? "" : cols[idx].trim();
     }
 
-    // 字串轉 Double；空值或非數字回傳 null
+    // 字串轉 Double；空值或非數字回傳 null（供 save() VO 使用）
     private Double toDouble(String s) {
         if (StringUtils.isBlank(s)) return null;
         try { return Double.parseDouble(s.replace(",", "")); }
+        catch (NumberFormatException e) { return null; }
+    }
+
+    // 字串轉 BigDecimal；Oracle JDBC 用 BigDecimal 對應 NUMBER，避免 BINARY_DOUBLE 型態衝突
+    private BigDecimal toDecimal(String s) {
+        if (StringUtils.isBlank(s)) return null;
+        try { return new BigDecimal(s.replace(",", "")); }
         catch (NumberFormatException e) { return null; }
     }
 
