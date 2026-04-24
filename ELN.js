@@ -1,5 +1,5 @@
 'use strict';
-eSoafApp.controller('PMS435Controller', function($rootScope, $scope, $controller, $timeout, $sce) {
+eSoafApp.controller('PMS435Controller', function($rootScope, $scope, $controller, $timeout, $sce, $http) {
     $controller('BaseController', { $scope: $scope });
 
     $scope.controllerName = "PMS435";
@@ -139,8 +139,11 @@ eSoafApp.controller('PMS435Controller', function($rootScope, $scope, $controller
     };
 
     // ================== 【CSV 批次匯入】 ==================
-    // 前端以 TextDecoder('big5') 解碼原始位元組，確保台灣 BIG5 中文正確呈現。
-    // 解碼後的 UTF-16 字串透過 JSON 傳送至後端 importCSV 方法。
+    // 流程：
+    //   1. 使用者選取 .csv 檔（BIG5 編碼，台灣 Excel 預設格式）
+    //   2. 透過 FormData + $http.post 上傳至伺服器暫存路徑（TEMP_PATH）
+    //   3. 伺服器回傳已儲存的 fileName
+    //   4. 呼叫 importCSV，後端以 CSVUtil.getBig5CSVFile 讀取並轉碼
 
     $scope.triggerCsvImport = function() {
         var fileInput = document.getElementById('csvFileInput');
@@ -154,58 +157,49 @@ eSoafApp.controller('PMS435Controller', function($rootScope, $scope, $controller
         fileInput.addEventListener('change', function(event) {
             var file = event.target.files[0];
             if (!file) return;
+            event.target.value = '';
 
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    // 以 BIG5 解碼原始位元組（現代瀏覽器均支援）
-                    var bytes = new Uint8Array(e.target.result);
-                    var decoder;
-                    try {
-                        decoder = new TextDecoder('big5');
-                    } catch (ex) {
-                        decoder = new TextDecoder('utf-8');
-                    }
-                    var csvText = decoder.decode(bytes);
-                    event.target.value = '';
+            if (!confirm('即將上傳並匯入：' + file.name + '\n確定繼續？')) return;
 
-                    // 簡易預覽行數
-                    var lines = csvText.split(/\r?\n/).filter(function(l) { return l.trim().length > 0; });
-                    if (lines.length < 2) {
-                        $timeout(function() { alert('CSV 無資料（至少需要標題列加一筆資料）。'); });
-                        return;
-                    }
+            // 第一步：上傳檔案至伺服器 TEMP_PATH
+            var formData = new FormData();
+            formData.append('file', file);
 
-                    $timeout(function() {
-                        if (!confirm('讀取到 ' + (lines.length - 1) + ' 筆資料，確定要批次匯入？')) return;
+            $http.post('uploadFile.action', formData, {
+                headers: { 'Content-Type': undefined },
+                transformRequest: angular.identity
+            }).then(function(resp) {
+                var serverFileName = resp.data && resp.data.fileName ? resp.data.fileName : file.name;
 
-                        $scope.sendRecv($scope.controllerName, 'importCSV',
-                            'com.systex.jbranch.app.server.fps.pms435.PMS435InputVO',
-                            { csv_content: csvText },
-                            function(totas, isError) {
-                                if (!isError) {
-                                    var body = totas[0].body || totas[0];
-                                    var msg  = '批次匯入完成！\n成功：' + (body.importSuccessCount || 0) +
-                                               ' 筆\n失敗：' + (body.importFailCount || 0) + ' 筆';
-                                    var errs = body.importErrors || [];
-                                    if (errs.length > 0) {
-                                        msg += '\n\n失敗明細（最多顯示 10 筆）：\n' + errs.slice(0, 10).join('\n');
-                                    }
-                                    alert(msg);
-                                    $scope.inquireInit();
-                                    $scope.inquire();
-                                } else {
-                                    var errMsg = (totas[0] && totas[0].head) ? totas[0].head.msgId : '未知錯誤';
-                                    alert('匯入失敗：' + errMsg);
-                                }
-                            }, 0, 0);
-                    });
+                // 第二步：通知後端以 CSVUtil 讀取並匯入
+                $scope.sendRecv($scope.controllerName, 'importCSV',
+                    'com.systex.jbranch.app.server.fps.pms435.PMS435InputVO',
+                    { fileName: serverFileName },
+                    function(totas, isError) {
+                        if (!isError) {
+                            var body   = totas[0].body || totas[0];
+                            var msg    = '批次匯入完成！\n成功：' + (body.importSuccessCount || 0) +
+                                         ' 筆\n失敗：'  + (body.importFailCount    || 0) + ' 筆';
+                            var errs   = body.importErrors || [];
+                            if (errs.length > 0) {
+                                msg += '\n\n失敗明細（最多顯示 10 筆）：\n' + errs.slice(0, 10).join('\n');
+                            }
+                            $timeout(function() {
+                                alert(msg);
+                                $scope.inquireInit();
+                                $scope.inquire();
+                            });
+                        } else {
+                            var errMsg = (totas[0] && totas[0].head) ? totas[0].head.msgId : '未知錯誤';
+                            $timeout(function() { alert('匯入失敗：' + errMsg); });
+                        }
+                    }, 0, 0);
 
-                } catch (err) {
-                    $timeout(function() { alert('CSV 解析發生錯誤：' + err.message); });
-                }
-            };
-            reader.readAsArrayBuffer(file);
+            }).catch(function(err) {
+                $timeout(function() {
+                    alert('檔案上傳失敗，請確認網路連線或洽 IT。\n錯誤：' + (err.statusText || err.status));
+                });
+            });
         });
     }, 0);
 

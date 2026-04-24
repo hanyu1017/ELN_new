@@ -42,7 +42,7 @@ public class PMS435InputVO extends PagingInputVO {
     private Double und5_price;
 
     // ── CSV 批次匯入 ──────────────────────────────
-    private String csv_content;      // 前端以 BIG5 解碼後的 CSV 文字內容
+    private String fileName;         // 上傳至伺服器暫存路徑後的檔案名稱
 
     // ── Getters / Setters ─────────────────────────
     public String getBond_id()                             { return bond_id; }
@@ -101,6 +101,6 @@ public class PMS435InputVO extends PagingInputVO {
     public void   setUnd5_ticker(String v)                 { this.und5_ticker = v; }
     public Double getUnd5_price()                          { return und5_price; }
     public void   setUnd5_price(Double v)                  { this.und5_price = v; }
-    public String getCsv_content()                         { return csv_content; }
-    public void   setCsv_content(String csv_content)       { this.csv_content = csv_content; }
+    public String getFileName()                            { return fileName; }
+    public void   setFileName(String fileName)             { this.fileName = fileName; }
 }
