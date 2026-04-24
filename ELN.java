@@ -4,12 +4,9 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import com.systex.jbranch.fubon.commons.FubonWmsBizLogic;
-import com.systex.jbranch.fubon.commons.CSVUtil;
 import com.systex.jbranch.platform.common.errHandle.APException;
 import com.systex.jbranch.platform.common.errHandle.JBranchException;
-import com.systex.jbranch.platform.server.bizLogic.sysvariant.SysInfo;
 import com.systex.jbranch.platform.util.IPrimitiveMap;
-import com.systex.jbranch.platform.util.SystemVariableConsts;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,9 +19,9 @@ import java.util.Set;
 public class PMS435 extends FubonWmsBizLogic {
 
     // =========================================================
-    // 【CSV 批次匯入】PRD230 標準 — MERGE + Delete-Insert
+    // 【CSV 批次匯入】MERGE + Delete-Insert
     //
-    // CSV 欄位索引對應（BIG5 編碼，由 CSVUtil.getBig5CSVFile 轉碼解析）：
+    // CSV 欄位索引對應（前端以 TextDecoder('big5') 解碼後傳入）：
     //   0  債券代號   1  交易日      2  UF%     3  IB       4  商品類型
     //   5  天期(月)   6  幣別        7  標的1    8  標的1進場價  9  標的2
     //  10  標的2進場  11 標的3      12 標的3進場  13 標的4   14 標的4進場
@@ -36,19 +33,29 @@ public class PMS435 extends FubonWmsBizLogic {
     public void importCSV(Object body, IPrimitiveMap header) throws JBranchException {
         try {
             PMS435InputVO vo = (PMS435InputVO) body;
+            String csvContent = vo.getCsv_content();
 
-            // 第一步：取得暫存路徑，以 BIG5 轉碼讀取上傳檔案
-            String tempPath = (String) SysInfo.getInfoValue(SystemVariableConsts.TEMP_PATH);
-            List<String[]> csvList = CSVUtil.getBig5CSVFile(tempPath, vo.getFileName());
-
-            if (csvList == null || csvList.isEmpty()) {
-                throw new APException("上傳檔案為空，請確認 CSV 內容");
+            if (StringUtils.isBlank(csvContent)) {
+                throw new APException("CSV 內容不可為空");
             }
 
-            Set<String> idList    = new HashSet<>();
-            int         successCount = 0;
-            int         failCount    = 0;
-            List<String> errors      = new ArrayList<>();
+            // 依換行切割，過濾純空白行
+            String[] rawLines = csvContent.split("\r?\n");
+            List<String[]> csvList = new ArrayList<>();
+            for (String line : rawLines) {
+                if (StringUtils.isNotBlank(line)) {
+                    csvList.add(parseCsvLine(line));
+                }
+            }
+
+            if (csvList.isEmpty()) {
+                throw new APException("CSV 至少需要標題列與一筆資料");
+            }
+
+            Set<String>  idList       = new HashSet<>();
+            int          successCount = 0;
+            int          failCount    = 0;
+            List<String> errors       = new ArrayList<>();
 
             for (int i = 0; i < csvList.size(); i++) {
                 String[] str = csvList.get(i);
@@ -456,6 +463,30 @@ public class PMS435 extends FubonWmsBizLogic {
             return "TO_DATE('" + s.substring(0, 10) + "','YYYY/MM/DD')";
         }
         return "NULL";
+    }
+
+    // CSV 單行解析（支援雙引號包覆欄位，符合 RFC 4180）
+    private String[] parseCsvLine(String line) {
+        List<String> fields = new ArrayList<>();
+        StringBuilder cur   = new StringBuilder();
+        boolean inQuote     = false;
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '"') {
+                if (inQuote && i + 1 < line.length() && line.charAt(i + 1) == '"') {
+                    cur.append('"'); i++;
+                } else {
+                    inQuote = !inQuote;
+                }
+            } else if (c == ',' && !inQuote) {
+                fields.add(cur.toString());
+                cur.setLength(0);
+            } else {
+                cur.append(c);
+            }
+        }
+        fields.add(cur.toString());
+        return fields.toArray(new String[0]);
     }
 
 }
