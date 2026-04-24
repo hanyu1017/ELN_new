@@ -108,6 +108,10 @@ public class PMS435 extends FubonWmsBizLogic {
     // 將 CSV 單筆資料列寫入資料庫（MERGE + Delete-Insert）
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void processSingleRow(String bondId, String[] cols) throws Exception {
+        // ── 必填欄位驗證 ─────────────────────────────────────
+        if (StringUtils.isBlank(safeGet(cols, 1)))
+            throw new Exception("交易日（欄 B）不可為空");
+
         // ── 解析欄位 ────────────────────────────────────────
         String sTradeDate    = toOraDate(safeGet(cols, 1));
         String sIssueDate    = toOraDate(safeGet(cols, 23));
