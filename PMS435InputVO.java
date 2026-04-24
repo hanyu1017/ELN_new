@@ -25,6 +25,7 @@ public class PMS435InputVO extends PagingInputVO {
     private Double strike_price;
     private Double ko_price;
     private String ko_type;
+    private String lockout_period;   // 閉鎖期，格式 NC_M（如 NC2M），空白代表無閉鎖
     private Double yield_pct;
     private Double ki_price;
     private String ki_type;
@@ -75,6 +76,8 @@ public class PMS435InputVO extends PagingInputVO {
     public void   setKo_price(Double ko_price)             { this.ko_price = ko_price; }
     public String getKo_type()                             { return ko_type; }
     public void   setKo_type(String ko_type)               { this.ko_type = ko_type; }
+    public String getLockout_period()                      { return lockout_period; }
+    public void   setLockout_period(String lockout_period) { this.lockout_period = lockout_period; }
     public Double getYield_pct()                           { return yield_pct; }
     public void   setYield_pct(Double yield_pct)           { this.yield_pct = yield_pct; }
     public Double getKi_price()                            { return ki_price; }
