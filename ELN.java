@@ -131,8 +131,8 @@ public class PMS435 extends FubonWmsBizLogic {
         // ── MERGE INTO ELN_PRODUCT ───────────────────────────
         StringBuilder mergeSql = new StringBuilder();
         mergeSql.append("MERGE INTO ELN_PRODUCT tgt ");
-        mergeSql.append("USING (SELECT :bondId AS BOND_ID FROM DUAL) src ");
-        mergeSql.append("ON (tgt.BOND_ID = src.BOND_ID) ");
+        mergeSql.append("USING DUAL ");
+        mergeSql.append("ON (tgt.BOND_ID = :bondId) ");
         mergeSql.append("WHEN MATCHED THEN UPDATE SET ");
         mergeSql.append("  TRADE_DATE           = ").append(sTradeDate).append(", ");
         mergeSql.append("  UF_PCT               = :ufPct, ");
@@ -231,8 +231,8 @@ public class PMS435 extends FubonWmsBizLogic {
 
             StringBuilder mergeSql = new StringBuilder();
             mergeSql.append("MERGE INTO ELN_PRODUCT tgt ");
-            mergeSql.append("USING (SELECT :bondId AS BOND_ID FROM DUAL) src ");
-            mergeSql.append("ON (tgt.BOND_ID = src.BOND_ID) ");
+            mergeSql.append("USING DUAL ");
+            mergeSql.append("ON (tgt.BOND_ID = :bondId) ");
             mergeSql.append("WHEN MATCHED THEN UPDATE SET ");
             mergeSql.append("  TRADE_DATE=").append(sTradeDate).append(", UF_PCT=:ufPct, IB=:ib, PROD_TYPE=:prodType, ");
             mergeSql.append("  TENOR=:tenor, CURRENCY=:currency, YIELD_PCT=:yieldPct, STRIKE_PRICE=:strikePrice, ");
