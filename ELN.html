@@ -1,313 +1,281 @@
 <div class="ELNProductMaintain" ng-controller="PMS435Controller" ng-cloak>
-    
-    <datalist id="ibList">
-        <option value="UBS"></option><option value="BBVA"></option>
-        <option value="NATIXIS"></option><option value="GS"></option>
-        <option value="BNP"></option><option value="CITI"></option>
-        <option value="HSBC"></option><option value="SG"></option>
-        <option value="CACIB"></option>
-    </datalist>
-    <datalist id="prodTypeList">
-        <option value="FCN"></option><option value="DRA"></option><option value="ELN"></option>
-    </datalist>
-    <datalist id="currencyList">
-        <option value="USD"></option><option value="JPY"></option>
-    </datalist>
-    <datalist id="koTypeList">
-        <option value="Daily Memory"></option><option value="NC2M"></option><option value="NC3M"></option>
-    </datalist>
-    <datalist id="kiTypeList">
-        <option value="AKI"></option><option value="EKI"></option><option value="None"></option>
-    </datalist>
+
     <datalist id="tickerList">
         <option ng-repeat="ticker in dbTickers" value="{{ticker}}"></option>
     </datalist>
 
+    <!-- ===== 頁面標題 ===== -->
     <div class="tfb_content">
         <div class="tfb_content_icon"></div>
         <div class="tfb_content_tit">
-            <img src="assets/images/icon/tfb_icon_a15.gif" />商品資料維護
+            <img src="assets/images/icon/tfb_icon_a15.gif" />ELN 風險監控 (PMS435)
         </div>
     </div>
-    
+
+    <!-- ===== 查詢條件 + CSV 匯入 ===== -->
     <div class="panel_content">
-        <div class="search_table search_box3 scroll_y">
-            <table style="width: 100%;">
-                <tr><td colspan="6" style="background-color: #eaf2f8; font-weight: bold; padding-left: 10px;">▌ 基礎與交易資訊</td></tr>
+        <div class="search_table search_box3">
+            <table style="width:100%;">
                 <tr>
-                    <th style="width: 10%;">債券代號：</th>
-                    <td style="width: 23%;"><input type="text" class="form-control" ng-model="inputVO.bond_id" style="width: 90%;"></td>
-                    <th style="width: 10%;">交易日：</th>
-                    <td style="width: 23%;"><input type="date" class="form-control" ng-model="inputVO.trade_date" style="width: 90%;"></td>
-                    <th style="width: 10%;">理專ID：</th>
-                    <td style="width: 24%;"><input type="text" class="form-control" ng-model="inputVO.rm_id" placeholder="多位用逗號分隔" style="width: 90%;"></td>
-                </tr>
-                <tr>
-                    <th>商品類型：</th>
-                    <td><input type="text" list="prodTypeList" class="form-control" ng-model="inputVO.prod_type" style="width: 90%;"></td>
-                    <th>IB：</th>
-                    <td><input type="text" list="ibList" class="form-control" ng-model="inputVO.ib" style="width: 90%;"></td>
-                    <th>幣別：</th>
-                    <td><input type="text" list="currencyList" class="form-control" ng-model="inputVO.currency" style="width: 90%;"></td>
-                </tr>
-                <tr>
-                    <th>天期(月)：</th>
-                    <td><input type="text" class="form-control" ng-model="inputVO.tenor" style="width: 90%;"></td>
-                    <th>發行日：</th>
-                    <td><input type="date" class="form-control" ng-model="inputVO.issue_date" style="width: 90%;"></td>
-                    <th>UF%：</th>
-                    <td><input type="number" class="form-control" ng-model="inputVO.uf_pct" style="width: 90%;"></td>
-                </tr>
-
-                <tr>
-                    <th>最終評價日：</th>
-                    <td><input type="date" class="form-control" ng-model="inputVO.final_valuation_date" style="width: 90%;"></td>
-                    <td colspan="4"></td>
-                </tr>
-
-                <tr><td colspan="6" style="background-color: #eaf2f8; font-weight: bold; padding-left: 10px; border-top: 1px solid #ccc;">▌ 商品規格條件</td></tr>
-                <tr>
-                    <th>執行價格(%)：</th>
-                    <td><input type="number" class="form-control" ng-model="inputVO.strike_price" style="width: 90%;"></td>
-                    <th>KO價格(%)：</th>
-                    <td><input type="number" class="form-control" ng-model="inputVO.ko_price" style="width: 90%;"></td>
-                    <th>KO類型：</th>
-                    <td><input type="text" list="koTypeList" class="form-control" ng-model="inputVO.ko_type" style="width: 90%;"></td>
-                </tr>
-                <tr>
-                    <th>收益率(%)：</th>
-                    <td><input type="number" class="form-control" ng-model="inputVO.yield_pct" style="width: 90%;"></td>
-                    <th>KI價格(%)：</th>
-                    <td><input type="number" class="form-control" ng-model="inputVO.ki_price" style="width: 90%;"></td>
-                    <th>KI類型：</th>
-                    <td><input type="text" list="kiTypeList" class="form-control" ng-model="inputVO.ki_type" style="width: 90%;"></td>
-                </tr>
-
-                <tr><td colspan="6" style="background-color: #eaf2f8; font-weight: bold; padding-left: 10px; border-top: 1px solid #ccc;">▌ 標的物設定 (最多 5 筆)</td></tr>
-                <tr>
-                    <th>標的 1：</th>
-                    <td>
-                        <input type="text" list="tickerList" class="form-control" ng-model="inputVO.und1_ticker" placeholder="代號" style="width: 45%; display:inline-block;">
-                        <input type="number" class="form-control" ng-model="inputVO.und1_price" placeholder="進場價" style="width: 43%; display:inline-block;">
+                    <th style="width:10%;">ELN代號：</th>
+                    <td style="width:25%;">
+                        <input type="text" class="form-control" ng-model="inputVO.bond_id"
+                               placeholder="模糊搜尋" style="width:90%;">
                     </td>
-                    <th>標的 2：</th>
-                    <td>
-                        <input type="text" list="tickerList" class="form-control" ng-model="inputVO.und2_ticker" placeholder="代號" style="width: 45%; display:inline-block;">
-                        <input type="number" class="form-control" ng-model="inputVO.und2_price" placeholder="進場價" style="width: 43%; display:inline-block;">
+                    <th style="width:10%;">理專ID：</th>
+                    <td style="width:25%;">
+                        <input type="text" class="form-control" ng-model="inputVO.rm_id"
+                               style="width:90%;">
                     </td>
-                    <th>標的 3：</th>
-                    <td>
-                        <input type="text" list="tickerList" class="form-control" ng-model="inputVO.und3_ticker" placeholder="代號" style="width: 45%; display:inline-block;">
-                        <input type="number" class="form-control" ng-model="inputVO.und3_price" placeholder="進場價" style="width: 43%; display:inline-block;">
-                    </td>
-                </tr>
-                <tr>
-                    <th>標的 4：</th>
-                    <td>
-                        <input type="text" list="tickerList" class="form-control" ng-model="inputVO.und4_ticker" placeholder="代號" style="width: 45%; display:inline-block;">
-                        <input type="number" class="form-control" ng-model="inputVO.und4_price" placeholder="進場價" style="width: 43%; display:inline-block;">
-                    </td>
-                    <th>標的 5：</th>
-                    <td colspan="3">
-                        <input type="text" list="tickerList" class="form-control" ng-model="inputVO.und5_ticker" placeholder="代號" style="width: 20%; display:inline-block;">
-                        <input type="number" class="form-control" ng-model="inputVO.und5_price" placeholder="進場價" style="width: 20%; display:inline-block;">
+                    <th style="width:10%;">標的代號：</th>
+                    <td style="width:20%;">
+                        <input type="text" list="tickerList" class="form-control"
+                               ng-model="inputVO.ticker" placeholder="如 PLTR" style="width:90%;">
                     </td>
                 </tr>
             </table>
         </div>
-        <div class="search_box_btn text-center" style="margin-top: 10px;">
-            <button type="button" class="btn btn-success" ng-click="saveData();"><span class="glyphicon glyphicon-floppy-disk"></span> 儲存商品</button>
-            <button type="button" class="btn btn-primary" ng-click="inquireInit();inquire();"><span class="glyphicon glyphicon-search"></span> 查詢監控清單</button>
-            <button type="button" class="btn btn-info" ng-click="argInit();"><span class="glyphicon glyphicon-erase"></span> 清除表單</button>
-            <button type="button" class="btn btn-warning" ng-click="triggerImport();"><span class="glyphicon glyphicon-upload"></span> 匯入 Excel</button>
-            <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display:none;">
+        <div class="search_box_btn text-center" style="margin-top:10px;">
+            <button type="button" class="btn btn-primary"
+                    ng-click="inquireInit();inquire();">
+                <span class="glyphicon glyphicon-search"></span> 查詢
+            </button>
+            <button type="button" class="btn btn-default"
+                    ng-click="argInit();">
+                <span class="glyphicon glyphicon-erase"></span> 清除
+            </button>
+            <button type="button" class="btn btn-warning"
+                    ng-click="triggerCsvImport();">
+                <span class="glyphicon glyphicon-upload"></span> 匯入 CSV
+            </button>
+            <input type="file" id="csvFileInput" accept=".csv" style="display:none;">
         </div>
     </div>
 
-    <div class="tfb_content" ng-show="resultList.length > 0">
-        <div class="tfb_content_icon"></div>
-        <div class="tfb_content_tit">
-            <img src="assets/images/icon/tfb_icon_a15.gif" />部位風險監控面板
-        </div>
-    </div>
-
+    <!-- ===== 查詢結果 ===== -->
     <div class="panel_content" ng-show="resultList.length > 0">
-        <div style="padding: 15px;">
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h4 style="color: #dc3545; font-weight: bold; margin: 0;">⚠️ KI 風險警示</h4>
-                <select class="form-control" ng-model="kiThreshold" ng-change="analyzeRiskAlerts()" style="display: inline-block; width: auto; padding: 4px 10px; height: 30px; border-color: #856404; background-color: #fff3cd; color: #856404; font-weight: bold;">
-                    <option value="1">篩選：距離 KI 1% 以內</option>
-                    <option value="3">篩選：距離 KI 3% 以內</option>
-                    <option value="5">篩選：距離 KI 5% 以內</option>
-                    <option value="10">篩選：距離 KI 10% 以內</option>
-                </select>
-            </div>
 
-            <div ng-if="riskAlerts.length > 0" style="max-height: 180px; overflow-y: auto; border: 1px solid #dc3545; border-radius: 4px;">
-                <table class="table table-bordered table-striped" style="margin-bottom: 0; background-color: #fffafb; text-align: center;">
-                    <thead style="background-color: #f8d7da; color: #721c24;">
-                        <tr>
-                            <th>⚠️ 警示商品 (類型)</th>
-                            <th>最差標的</th>
-                            <th>KI 價格</th>
-                            <th>KI 狀態</th>
-                            <th style="width: 38%;">KI ←→ KO 距離數線</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr ng-repeat="risk in riskAlerts" ng-style="risk.IS_AKI ? {'background-color': '#fde8e8'} : {}">
-                            <td style="font-weight: bold; vertical-align: middle;">{{ risk.BOND_ID }} ({{ risk.PROD_TYPE }})</td>
-                            <td style="font-weight: bold; vertical-align: middle;">{{ risk.WORST_TICKER }}</td>
-                            <td style="vertical-align: middle;">{{ risk.KI_PRICE }}% ({{ risk.KI_TYPE }})</td>
-                            <td style="font-weight: bold; vertical-align: middle;">
-                                <span ng-if="!risk.IS_AKI" style="color: #dc3545; font-size: 15px;">{{ risk.DIST_TO_KI | number:2 }}%</span>
-                                <span ng-if="risk.IS_AKI" style="color: #721c24; font-size: 13px;">⛔ 已觸發KI</span>
-                            </td>
-                            <td style="vertical-align: middle; padding: 6px 14px;">
-                                <!-- 1D 距離數線 -->
-                                <div style="position: relative; padding: 0 36px 22px;">
-                                    <!-- KI 端標籤 -->
-                                    <div style="position: absolute; left: 0; top: 0; width: 34px; text-align: center; font-size: 12px; color: #dc3545; font-weight: bold; line-height: 1.3;">KI<br>{{risk.KI_PRICE | number:0}}%</div>
-                                    <!-- KO 端標籤 -->
-                                    <div style="position: absolute; right: 0; top: 0; width: 34px; text-align: center; font-size: 12px; color: #28a745; font-weight: bold; line-height: 1.3;">KO<br>{{risk.KO_PRICE | number:0}}%</div>
-                                    <!-- 數線軌道 -->
-                                    <div style="position: relative; height: 8px; margin-top: 9px; border-radius: 4px; background: linear-gradient(to right, #dc3545 0%, #ffc107 40%, #28a745 100%);">
-                                        <!-- 左端刻度線 -->
-                                        <div style="position: absolute; left: -1px; top: -4px; width: 2px; height: 16px; background: #dc3545;"></div>
-                                        <!-- 右端刻度線 -->
-                                        <div style="position: absolute; right: -1px; top: -4px; width: 2px; height: 16px; background: #28a745;"></div>
-                                        <!-- 現值位置圓點 -->
-                                        <div ng-style="{'left': risk.POSITION_PCT + '%', 'background-color': risk.IS_AKI ? '#dc3545' : '#0d6efd'}"
-                                             style="position: absolute; top: 50%; transform: translateX(-50%) translateY(-50%); width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 5px rgba(0,0,0,0.45);"></div>
-                                        <!-- 現值標籤 (跟隨圓點) -->
-                                        <div ng-style="{'left': risk.POSITION_PCT + '%', 'color': risk.IS_AKI ? '#dc3545' : '#0d6efd'}"
-                                             style="position: absolute; top: 13px; transform: translateX(-50%); font-size: 12px; font-weight: bold; white-space: nowrap;">
-                                            {{risk.CURRENT_RATIO | number:1}}%
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <div ng-if="riskAlerts.length === 0" style="color: #28a745; font-weight: bold; padding: 8px 15px; background-color: #f8fff8; border: 1px solid #28a745; border-radius: 4px;">
-                ✅ 目前無 KI 已觸發部位，且所有查詢部位距離 KI 皆大於 {{kiThreshold}}% 緩衝空間。
-            </div>
-        </div>
-    </div>
-
-    <div class="panel_content" ng-show="resultList.length > 0">
-        
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: #f0f4f8; border: 1px solid #c8d8e8; border-radius: 4px; margin-bottom: 5px; flex-wrap: wrap; gap: 6px;">
+        <!-- 分頁列 -->
+        <div style="display:flex; align-items:center; justify-content:space-between;
+                    padding:6px 10px; background:#f0f4f8; border:1px solid #c8d8e8;
+                    border-radius:4px; margin-bottom:5px; flex-wrap:wrap; gap:6px;">
             <div>
-                <button class="btn btn-xs btn-default" ng-click="goToPage(1)" ng-disabled="currentPage === 1" style="margin-right: 2px;">&#171; 首頁</button>
-                <button class="btn btn-xs btn-default" ng-click="goToPage(currentPage - 1)" ng-disabled="currentPage === 1" style="margin-right: 2px;">&#8249; 上頁</button>
-                <button class="btn btn-xs btn-default" ng-click="goToPage(currentPage + 1)" ng-disabled="currentPage >= totalPages()" style="margin-right: 2px;">下頁 &#8250;</button>
-                <button class="btn btn-xs btn-default" ng-click="goToPage(totalPages())" ng-disabled="currentPage >= totalPages()">末頁 &#187;</button>
+                <button class="btn btn-xs btn-default" ng-click="goToPage(1)"
+                        ng-disabled="currentPage===1" style="margin-right:2px;">&#171; 首頁</button>
+                <button class="btn btn-xs btn-default" ng-click="goToPage(currentPage-1)"
+                        ng-disabled="currentPage===1" style="margin-right:2px;">&#8249; 上頁</button>
+                <button class="btn btn-xs btn-default" ng-click="goToPage(currentPage+1)"
+                        ng-disabled="currentPage>=totalPages()" style="margin-right:2px;">下頁 &#8250;</button>
+                <button class="btn btn-xs btn-default" ng-click="goToPage(totalPages())"
+                        ng-disabled="currentPage>=totalPages()">末頁 &#187;</button>
             </div>
-            <div style="font-size: 13px; color: #444;">
-                第 <strong>{{currentPage}}</strong> 頁 ／ 共 <strong>{{totalPages()}}</strong> 頁 ／ 共 <strong>{{resultList.length}}</strong> 筆資料
+            <div style="font-size:13px; color:#444;">
+                第 <strong>{{currentPage}}</strong> 頁 ／
+                共 <strong>{{totalPages()}}</strong> 頁 ／
+                共 <strong>{{resultList.length}}</strong> 筆
             </div>
         </div>
 
-        <div class="gv_tab_sc scroll_y" style="overflow-x: auto; white-space: nowrap; max-width: 100%;">
-            <table class="table-bordered" style="min-width: 2900px;">
+        <div class="gv_tab_sc scroll_y" style="overflow-x:auto; white-space:nowrap; max-width:100%;">
+            <table class="table-bordered" style="min-width:2200px; font-size:13px;">
                 <thead>
-                    <!-- 第一列：群組標題 -->
-                    <tr style="background-color: #689bb8; color: white; text-align: center;">
-                        <th rowspan="2" style="vertical-align: middle;">功能</th>
-                        <th rowspan="2" style="vertical-align: middle;">警示狀態</th>
-                        <th rowspan="2" style="vertical-align: middle;">債券代號</th>
-                        <th rowspan="2" style="vertical-align: middle;">理專ID</th>
-                        <th colspan="3" style="background-color: #4878a0; border-bottom: 2px solid #c8daea;">▌ 標的 1</th>
-                        <th colspan="3" style="background-color: #3d7a57; border-bottom: 2px solid #b8d8c4;">▌ 標的 2</th>
-                        <th colspan="3" style="background-color: #7a6038; border-bottom: 2px solid #d8c8a8;">▌ 標的 3</th>
-                        <th colspan="3" style="background-color: #5c4880; border-bottom: 2px solid #c8b8e0;">▌ 標的 4</th>
-                        <th colspan="3" style="background-color: #387878; border-bottom: 2px solid #a8d0d0;">▌ 標的 5</th>
-                        <th rowspan="2" style="vertical-align: middle;">商品類型</th>
-                        <th rowspan="2" style="vertical-align: middle;">IB</th>
-                        <th rowspan="2" style="vertical-align: middle;">幣別</th>
-                        <th rowspan="2" style="vertical-align: middle;">天期</th>
-                        <th rowspan="2" style="vertical-align: middle;">UF%</th>
-                        <th rowspan="2" style="vertical-align: middle;">收益率(%)</th>
-                        <th rowspan="2" style="vertical-align: middle;">執行價格(%)</th>
-                        <th rowspan="2" style="vertical-align: middle;">KO價格(%)</th>
-                        <th rowspan="2" style="vertical-align: middle;">KO類型</th>
-                        <th rowspan="2" style="vertical-align: middle;">KI價格(%)</th>
-                        <th rowspan="2" style="vertical-align: middle;">KI類型</th>
-                        <th rowspan="2" style="vertical-align: middle;">最終評價日</th>
+                    <tr style="background-color:#689bb8; color:white; text-align:center;">
+                        <th rowspan="2" style="vertical-align:middle; width:60px;">操作</th>
+                        <th rowspan="2" style="vertical-align:middle;">債券代號</th>
+                        <th rowspan="2" style="vertical-align:middle;">理專</th>
+                        <th rowspan="2" style="vertical-align:middle;">閉鎖狀態</th>
+                        <!-- 標的群組（每個標的：燈號+代號+觸發日 / 進場價 / 現價%）-->
+                        <th colspan="3" style="background:#4878a0; border-bottom:2px solid #c8daea;">▌ 標的 1</th>
+                        <th colspan="3" style="background:#3d7a57; border-bottom:2px solid #b8d8c4;">▌ 標的 2</th>
+                        <th colspan="3" style="background:#7a6038; border-bottom:2px solid #d8c8a8;">▌ 標的 3</th>
+                        <th colspan="3" style="background:#5c4880; border-bottom:2px solid #c8b8e0;">▌ 標的 4</th>
+                        <th colspan="3" style="background:#387878; border-bottom:2px solid #a8d0d0;">▌ 標的 5</th>
+                        <!-- 商品規格 -->
+                        <th rowspan="2" style="vertical-align:middle;">類型</th>
+                        <th rowspan="2" style="vertical-align:middle;">IB</th>
+                        <th rowspan="2" style="vertical-align:middle;">幣別</th>
+                        <th rowspan="2" style="vertical-align:middle;">天期</th>
+                        <th rowspan="2" style="vertical-align:middle;">UF%</th>
+                        <th rowspan="2" style="vertical-align:middle;">收益率%</th>
+                        <th rowspan="2" style="vertical-align:middle;">執行價%</th>
+                        <th rowspan="2" style="vertical-align:middle;">KO%</th>
+                        <th rowspan="2" style="vertical-align:middle;">KO類型</th>
+                        <th rowspan="2" style="vertical-align:middle;">KI%</th>
+                        <th rowspan="2" style="vertical-align:middle;">KI類型</th>
+                        <th rowspan="2" style="vertical-align:middle;">發行日</th>
+                        <th rowspan="2" style="vertical-align:middle;">最後評價日</th>
+                        <th rowspan="2" style="vertical-align:middle;">到期日</th>
                     </tr>
-                    <!-- 第二列：子欄位標題 -->
-                    <tr style="color: white; font-size: 12px; text-align: center;">
-                        <th style="background-color: #5888b0;">代號</th><th style="background-color: #5888b0;">進場價</th><th style="background-color: #5888b0;">現價 (%)</th>
-                        <th style="background-color: #4d8a67;">代號</th><th style="background-color: #4d8a67;">進場價</th><th style="background-color: #4d8a67;">現價 (%)</th>
-                        <th style="background-color: #8a7048;">代號</th><th style="background-color: #8a7048;">進場價</th><th style="background-color: #8a7048;">現價 (%)</th>
-                        <th style="background-color: #6c5890;">代號</th><th style="background-color: #6c5890;">進場價</th><th style="background-color: #6c5890;">現價 (%)</th>
-                        <th style="background-color: #488888;">代號</th><th style="background-color: #488888;">進場價</th><th style="background-color: #488888;">現價 (%)</th>
+                    <tr style="color:white; font-size:12px; text-align:center;">
+                        <!-- 標的 1 子欄 -->
+                        <th style="background:#5888b0;">燈號 / 代號</th>
+                        <th style="background:#5888b0;">進場價</th>
+                        <th style="background:#5888b0;">現價(%)</th>
+                        <!-- 標的 2 子欄 -->
+                        <th style="background:#4d8a67;">燈號 / 代號</th>
+                        <th style="background:#4d8a67;">進場價</th>
+                        <th style="background:#4d8a67;">現價(%)</th>
+                        <!-- 標的 3 子欄 -->
+                        <th style="background:#8a7048;">燈號 / 代號</th>
+                        <th style="background:#8a7048;">進場價</th>
+                        <th style="background:#8a7048;">現價(%)</th>
+                        <!-- 標的 4 子欄 -->
+                        <th style="background:#6c5890;">燈號 / 代號</th>
+                        <th style="background:#6c5890;">進場價</th>
+                        <th style="background:#6c5890;">現價(%)</th>
+                        <!-- 標的 5 子欄 -->
+                        <th style="background:#488888;">燈號 / 代號</th>
+                        <th style="background:#488888;">進場價</th>
+                        <th style="background:#488888;">現價(%)</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr class="repeat-row" ng-repeat="row in paramList track by $index" ng-class-odd="'rowOdd'" ng-class-even="'rowEven'">
+                    <tr class="repeat-row"
+                        ng-repeat="row in paramList track by $index"
+                        ng-class-odd="'rowOdd'" ng-class-even="'rowEven'">
+
+                        <!-- 操作 -->
                         <td align="center">
-                            <button class="btn btn-xs btn-default" ng-click="editRow(row)">編輯</button>
-                            <button class="btn btn-xs btn-danger" ng-click="deleteRow(row.BOND_ID)">刪除</button>
-                        </td>
-                        <td align="center">
-                            <span ng-if="row.HAS_TOUCHED_AKI === 'Y'" style="color: #dc3545; font-weight: bold; padding:2px; border:1px solid #dc3545;">⚠️已觸發AKI</span>
-                            <span ng-if="row.HAS_TOUCHED_AKI !== 'Y' && getWorstPerformance(row) >= 0" style="color: #28a745; font-weight: bold;">🟢 安全</span>
-                            <span ng-if="row.HAS_TOUCHED_AKI !== 'Y' && getWorstPerformance(row) < 0 && getWorstPerformance(row) > -10" style="color: #fd7e14; font-weight: bold;">🟠 注意</span>
-                            <span ng-if="row.HAS_TOUCHED_AKI !== 'Y' && getWorstPerformance(row) <= -10" style="color: #dc3545; font-weight: bold;">🔴 危險</span>
-                        </td>
-                        <td align="center" style="font-weight: bold;">{{row.BOND_ID}}</td>
-                        <td align="center">{{row.RM_ID}}</td>
-                        
-                        <!-- 標的 1 -->
-                        <td align="center" style="font-weight: bold; color: #1a3a5c; letter-spacing: 0.5px;">{{row.UND1_TICKER || '—'}}</td>
-                        <td align="right" style="color: #555;">{{row.UND1_PRICE | number:2}}</td>
-                        <td align="right" ng-style="getPriceStyle(row.UND1_PRICE, row.UND1_CURRENT)" style="font-weight: bold; white-space: nowrap;">
-                            <span>{{row.UND1_CURRENT | number:2}}</span>
-                            <span ng-if="row.UND1_PRICE && row.UND1_CURRENT" style="display:block; font-size:11px; font-weight:normal; opacity:0.85;">({{getPctChange(row.UND1_PRICE, row.UND1_CURRENT) | number:1}}%)</span>
-                        </td>
-                        <!-- 標的 2 -->
-                        <td align="center" style="font-weight: bold; color: #1a3c28; letter-spacing: 0.5px;">{{row.UND2_TICKER || '—'}}</td>
-                        <td align="right" style="color: #555;">{{row.UND2_PRICE | number:2}}</td>
-                        <td align="right" ng-style="getPriceStyle(row.UND2_PRICE, row.UND2_CURRENT)" style="font-weight: bold; white-space: nowrap;">
-                            <span>{{row.UND2_CURRENT | number:2}}</span>
-                            <span ng-if="row.UND2_PRICE && row.UND2_CURRENT" style="display:block; font-size:11px; font-weight:normal; opacity:0.85;">({{getPctChange(row.UND2_PRICE, row.UND2_CURRENT) | number:1}}%)</span>
-                        </td>
-                        <!-- 標的 3 -->
-                        <td align="center" style="font-weight: bold; color: #3c2c10; letter-spacing: 0.5px;">{{row.UND3_TICKER || '—'}}</td>
-                        <td align="right" style="color: #555;">{{row.UND3_PRICE | number:2}}</td>
-                        <td align="right" ng-style="getPriceStyle(row.UND3_PRICE, row.UND3_CURRENT)" style="font-weight: bold; white-space: nowrap;">
-                            <span>{{row.UND3_CURRENT | number:2}}</span>
-                            <span ng-if="row.UND3_PRICE && row.UND3_CURRENT" style="display:block; font-size:11px; font-weight:normal; opacity:0.85;">({{getPctChange(row.UND3_PRICE, row.UND3_CURRENT) | number:1}}%)</span>
-                        </td>
-                        <!-- 標的 4 -->
-                        <td align="center" style="font-weight: bold; color: #2c1c40; letter-spacing: 0.5px;">{{row.UND4_TICKER || '—'}}</td>
-                        <td align="right" style="color: #555;">{{row.UND4_PRICE | number:2}}</td>
-                        <td align="right" ng-style="getPriceStyle(row.UND4_PRICE, row.UND4_CURRENT)" style="font-weight: bold; white-space: nowrap;">
-                            <span>{{row.UND4_CURRENT | number:2}}</span>
-                            <span ng-if="row.UND4_PRICE && row.UND4_CURRENT" style="display:block; font-size:11px; font-weight:normal; opacity:0.85;">({{getPctChange(row.UND4_PRICE, row.UND4_CURRENT) | number:1}}%)</span>
-                        </td>
-                        <!-- 標的 5 -->
-                        <td align="center" style="font-weight: bold; color: #0e3030; letter-spacing: 0.5px;">{{row.UND5_TICKER || '—'}}</td>
-                        <td align="right" style="color: #555;">{{row.UND5_PRICE | number:2}}</td>
-                        <td align="right" ng-style="getPriceStyle(row.UND5_PRICE, row.UND5_CURRENT)" style="font-weight: bold; white-space: nowrap;">
-                            <span>{{row.UND5_CURRENT | number:2}}</span>
-                            <span ng-if="row.UND5_PRICE && row.UND5_CURRENT" style="display:block; font-size:11px; font-weight:normal; opacity:0.85;">({{getPctChange(row.UND5_PRICE, row.UND5_CURRENT) | number:1}}%)</span>
+                            <button class="btn btn-xs btn-danger"
+                                    ng-click="deleteRow(row.BOND_ID)">刪除</button>
                         </td>
 
-                        <td align="center">{{row.PROD_TYPE}}</td><td align="center">{{row.IB}}</td><td align="center">{{row.CURRENCY}}</td><td align="center">{{row.TENOR}}</td>
-                        <td align="right">{{row.UF_PCT}}</td><td align="right">{{row.YIELD_PCT}}</td><td align="right">{{row.STRIKE_PRICE}}</td>
-                        <td align="right">{{row.KO_PRICE}}</td><td align="center">{{row.KO_TYPE}}</td><td align="right">{{row.KI_PRICE}}</td><td align="center">{{row.KI_TYPE}}</td>
+                        <td align="center" style="font-weight:bold;">{{row.BOND_ID}}</td>
+                        <td align="center">{{row.RM_ID}}</td>
+
+                        <!-- 閉鎖狀態 -->
+                        <td align="center">
+                            <span ng-if="row.LOCKOUT_STATUS==='閉鎖中'"
+                                  style="color:#856404; background:#fff3cd; padding:2px 6px;
+                                         border-radius:3px; font-weight:bold;">🔒 閉鎖中</span>
+                            <span ng-if="row.LOCKOUT_STATUS==='已到期'"
+                                  style="color:#6c757d; font-weight:bold;">⬛ 已到期</span>
+                            <span ng-if="row.LOCKOUT_STATUS==='觀察中'"
+                                  style="color:#0d6efd;">👁 觀察中</span>
+                        </td>
+
+                        <!-- 標的 1 -->
+                        <td align="center" style="white-space:normal; min-width:90px;">
+                            <span ng-bind-html="getUndLight(row,1)"></span>
+                            <strong>{{row.UND1_TICKER || '—'}}</strong>
+                            <div ng-if="getUndDate(row,1)"
+                                 style="font-size:11px; color:#555; margin-top:2px;">
+                                {{getUndDate(row,1)}} {{getUndStatus(row,1)}}
+                            </div>
+                        </td>
+                        <td align="right">{{row.UND1_ENTRY_PRICE | number:2}}</td>
+                        <td align="right" ng-style="getPriceStyle(row.UND1_ENTRY_PRICE, row.UND1_CURRENT_PRICE)"
+                            style="font-weight:bold; white-space:nowrap;">
+                            <span>{{row.UND1_CURRENT_PRICE | number:2}}</span>
+                            <span ng-if="row.UND1_ENTRY_PRICE && row.UND1_CURRENT_PRICE"
+                                  style="display:block; font-size:11px; font-weight:normal;">
+                                ({{getPctChange(row.UND1_ENTRY_PRICE, row.UND1_CURRENT_PRICE) | number:1}}%)
+                            </span>
+                        </td>
+
+                        <!-- 標的 2 -->
+                        <td align="center" style="white-space:normal; min-width:90px;">
+                            <span ng-bind-html="getUndLight(row,2)"></span>
+                            <strong>{{row.UND2_TICKER || '—'}}</strong>
+                            <div ng-if="getUndDate(row,2)"
+                                 style="font-size:11px; color:#555; margin-top:2px;">
+                                {{getUndDate(row,2)}} {{getUndStatus(row,2)}}
+                            </div>
+                        </td>
+                        <td align="right">{{row.UND2_ENTRY_PRICE | number:2}}</td>
+                        <td align="right" ng-style="getPriceStyle(row.UND2_ENTRY_PRICE, row.UND2_CURRENT_PRICE)"
+                            style="font-weight:bold; white-space:nowrap;">
+                            <span>{{row.UND2_CURRENT_PRICE | number:2}}</span>
+                            <span ng-if="row.UND2_ENTRY_PRICE && row.UND2_CURRENT_PRICE"
+                                  style="display:block; font-size:11px; font-weight:normal;">
+                                ({{getPctChange(row.UND2_ENTRY_PRICE, row.UND2_CURRENT_PRICE) | number:1}}%)
+                            </span>
+                        </td>
+
+                        <!-- 標的 3 -->
+                        <td align="center" style="white-space:normal; min-width:90px;">
+                            <span ng-bind-html="getUndLight(row,3)"></span>
+                            <strong>{{row.UND3_TICKER || '—'}}</strong>
+                            <div ng-if="getUndDate(row,3)"
+                                 style="font-size:11px; color:#555; margin-top:2px;">
+                                {{getUndDate(row,3)}} {{getUndStatus(row,3)}}
+                            </div>
+                        </td>
+                        <td align="right">{{row.UND3_ENTRY_PRICE | number:2}}</td>
+                        <td align="right" ng-style="getPriceStyle(row.UND3_ENTRY_PRICE, row.UND3_CURRENT_PRICE)"
+                            style="font-weight:bold; white-space:nowrap;">
+                            <span>{{row.UND3_CURRENT_PRICE | number:2}}</span>
+                            <span ng-if="row.UND3_ENTRY_PRICE && row.UND3_CURRENT_PRICE"
+                                  style="display:block; font-size:11px; font-weight:normal;">
+                                ({{getPctChange(row.UND3_ENTRY_PRICE, row.UND3_CURRENT_PRICE) | number:1}}%)
+                            </span>
+                        </td>
+
+                        <!-- 標的 4 -->
+                        <td align="center" style="white-space:normal; min-width:90px;">
+                            <span ng-bind-html="getUndLight(row,4)"></span>
+                            <strong>{{row.UND4_TICKER || '—'}}</strong>
+                            <div ng-if="getUndDate(row,4)"
+                                 style="font-size:11px; color:#555; margin-top:2px;">
+                                {{getUndDate(row,4)}} {{getUndStatus(row,4)}}
+                            </div>
+                        </td>
+                        <td align="right">{{row.UND4_ENTRY_PRICE | number:2}}</td>
+                        <td align="right" ng-style="getPriceStyle(row.UND4_ENTRY_PRICE, row.UND4_CURRENT_PRICE)"
+                            style="font-weight:bold; white-space:nowrap;">
+                            <span>{{row.UND4_CURRENT_PRICE | number:2}}</span>
+                            <span ng-if="row.UND4_ENTRY_PRICE && row.UND4_CURRENT_PRICE"
+                                  style="display:block; font-size:11px; font-weight:normal;">
+                                ({{getPctChange(row.UND4_ENTRY_PRICE, row.UND4_CURRENT_PRICE) | number:1}}%)
+                            </span>
+                        </td>
+
+                        <!-- 標的 5 -->
+                        <td align="center" style="white-space:normal; min-width:90px;">
+                            <span ng-bind-html="getUndLight(row,5)"></span>
+                            <strong>{{row.UND5_TICKER || '—'}}</strong>
+                            <div ng-if="getUndDate(row,5)"
+                                 style="font-size:11px; color:#555; margin-top:2px;">
+                                {{getUndDate(row,5)}} {{getUndStatus(row,5)}}
+                            </div>
+                        </td>
+                        <td align="right">{{row.UND5_ENTRY_PRICE | number:2}}</td>
+                        <td align="right" ng-style="getPriceStyle(row.UND5_ENTRY_PRICE, row.UND5_CURRENT_PRICE)"
+                            style="font-weight:bold; white-space:nowrap;">
+                            <span>{{row.UND5_CURRENT_PRICE | number:2}}</span>
+                            <span ng-if="row.UND5_ENTRY_PRICE && row.UND5_CURRENT_PRICE"
+                                  style="display:block; font-size:11px; font-weight:normal;">
+                                ({{getPctChange(row.UND5_ENTRY_PRICE, row.UND5_CURRENT_PRICE) | number:1}}%)
+                            </span>
+                        </td>
+
+                        <!-- 商品規格 -->
+                        <td align="center">{{row.PROD_TYPE}}</td>
+                        <td align="center">{{row.IB}}</td>
+                        <td align="center">{{row.CURRENCY}}</td>
+                        <td align="center">{{row.TENOR}}</td>
+                        <td align="right">{{row.UF_PCT}}</td>
+                        <td align="right">{{row.YIELD_PCT}}</td>
+                        <td align="right">{{row.STRIKE_PRICE}}</td>
+                        <td align="right">{{row.KO_PRICE}}</td>
+                        <td align="center">{{row.KO_TYPE}}</td>
+                        <td align="right">{{row.KI_PRICE}}</td>
+                        <td align="center">{{row.KI_TYPE}}</td>
+                        <td align="center">{{row.ISSUE_DATE}}</td>
                         <td align="center">{{row.FINAL_VALUATION_DATE}}</td>
+                        <td align="center">{{row.MATURITY_DATE}}</td>
                     </tr>
                 </tbody>
             </table>
         </div>
         <br>
     </div>
+
+    <!-- 無結果提示 -->
+    <div class="panel_content" ng-show="queried && resultList.length === 0">
+        <div style="padding:20px; text-align:center; color:#888;">
+            查無符合條件的商品資料。
+        </div>
+    </div>
+
 </div>
