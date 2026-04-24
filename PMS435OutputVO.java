@@ -1,10 +1,10 @@
 package com.systex.jbranch.app.server.fps.pms435;
 
-import com.systex.jbranch.platform.common.dataaccess.vo.BaseVO;
+import com.systex.jbranch.app.server.fps.sot701.basicVO;
 import java.util.List;
 import java.util.Map;
 
-public class PMS435OutputVO extends BaseVO {
+public class PMS435OutputVO extends basicVO {
     private static final long serialVersionUID = 1L;
 
     private List<Map<String, Object>> resultList;

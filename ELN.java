@@ -94,7 +94,7 @@ public class PMS435 extends FubonWmsBizLogic {
             throw ape;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new JBranchException("ERR_PMS435_IMPORT", "CSV 匯入失敗：" + e.getMessage());
+            throw new JBranchException("ERR_PMS435_IMPORT" + "CSV 匯入失敗：" + e.getMessage());
         }
     }
 
@@ -271,7 +271,7 @@ public class PMS435 extends FubonWmsBizLogic {
 
         } catch (Exception e) {
             e.printStackTrace();
-            throw new JBranchException("ERR_PMS435_SAVE", "商品儲存失敗：" + e.getMessage());
+            throw new JBranchException("ERR_PMS435_SAVE" + "商品儲存失敗：" + e.getMessage());
         }
     }
 
@@ -293,7 +293,7 @@ public class PMS435 extends FubonWmsBizLogic {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            throw new JBranchException("ERR_PMS435_DEL", "商品刪除失敗：" + e.getMessage());
+            throw new JBranchException("ERR_PMS435_DEL" + "商品刪除失敗：" + e.getMessage());
         }
     }
 
@@ -405,7 +405,7 @@ public class PMS435 extends FubonWmsBizLogic {
 
         } catch (Exception e) {
             e.printStackTrace();
-            throw new JBranchException("ERR_PMS435_QUERY", "查詢商品失敗：" + e.getMessage());
+            throw new JBranchException("ERR_PMS435_QUERY" + "查詢商品失敗：" + e.getMessage());
         }
     }
 
@@ -427,7 +427,7 @@ public class PMS435 extends FubonWmsBizLogic {
             this.sendRtnObject(outputVO);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new JBranchException("ERR_PMS435_TICKER", "載入標的清單失敗：" + e.getMessage());
+            throw new JBranchException("ERR_PMS435_TICKER" + "載入標的清單失敗：" + e.getMessage());
         }
     }
 
