@@ -25,9 +25,9 @@ public class PMS435 extends FubonWmsBizLogic {
     //   0  債券代號   1  交易日      2  UF%     3  IB       4  商品類型
     //   5  天期(月)   6  幣別        7  標的1    8  標的1進場價  9  標的2
     //  10  標的2進場  11 標的3      12 標的3進場  13 標的4   14 標的4進場
-    //  15  標的5     16 標的5進場   17 收益率(%)  18 履約條件(KO)  19 KO價格(%)
-    //  20  KO類型    21 KI價格(%)   22 KI類型    23 發行日   24 最後評價日
-    //  25  到期日    26 理專
+    //  15  標的5     16 標的5進場   17 收益率(%)  18 閉鎖期(NC_M)  19 KO價格(%)
+    //  20  KI價格(%) 21 KI類型      22 發行日    23 最後評價日
+    //  24  到期日    25 理專
     // =========================================================
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void importCSV(Object body, IPrimitiveMap header) throws JBranchException {
@@ -110,9 +110,9 @@ public class PMS435 extends FubonWmsBizLogic {
     private void processSingleRow(String bondId, String[] cols) throws Exception {
         // ── 解析欄位 ────────────────────────────────────────
         String sTradeDate    = toOraDate(safeGet(cols, 1));
-        String sIssueDate    = toOraDate(safeGet(cols, 23));
-        String sFinalValDate = toOraDate(safeGet(cols, 24));
-        String sMaturityDate = toOraDate(safeGet(cols, 25));
+        String sIssueDate    = toOraDate(safeGet(cols, 22));
+        String sFinalValDate = toOraDate(safeGet(cols, 23));
+        String sMaturityDate = toOraDate(safeGet(cols, 24));
 
         Map<String, Object> params = new HashMap<>();
         params.put("bondId",      bondId);
@@ -121,11 +121,10 @@ public class PMS435 extends FubonWmsBizLogic {
         params.put("tenor",       safeGet(cols, 5));
         params.put("currency",    safeGet(cols, 6));
         params.put("yieldPct",    toDouble(safeGet(cols, 17)));
-        params.put("strikePrice", toDouble(safeGet(cols, 18)));
+        params.put("koType",      safeGet(cols, 18));
         params.put("koPrice",     toDouble(safeGet(cols, 19)));
-        params.put("koType",      safeGet(cols, 20));
-        params.put("kiPrice",     toDouble(safeGet(cols, 21)));
-        params.put("kiType",      safeGet(cols, 22));
+        params.put("kiPrice",     toDouble(safeGet(cols, 20)));
+        params.put("kiType",      safeGet(cols, 21));
         params.put("ufPct",       toDouble(safeGet(cols, 2)));
 
         // ── MERGE INTO ELN_PRODUCT ───────────────────────────
@@ -141,7 +140,6 @@ public class PMS435 extends FubonWmsBizLogic {
         mergeSql.append("  TENOR                = :tenor, ");
         mergeSql.append("  CURRENCY             = :currency, ");
         mergeSql.append("  YIELD_PCT            = :yieldPct, ");
-        mergeSql.append("  STRIKE_PRICE         = :strikePrice, ");
         mergeSql.append("  KO_PRICE             = :koPrice, ");
         mergeSql.append("  KO_TYPE              = :koType, ");
         mergeSql.append("  KI_PRICE             = :kiPrice, ");
@@ -151,11 +149,11 @@ public class PMS435 extends FubonWmsBizLogic {
         mergeSql.append("  MATURITY_DATE        = ").append(sMaturityDate).append(" ");
         mergeSql.append("WHEN NOT MATCHED THEN INSERT ");
         mergeSql.append("  (BOND_ID, TRADE_DATE, UF_PCT, IB, PROD_TYPE, TENOR, CURRENCY, ");
-        mergeSql.append("   YIELD_PCT, STRIKE_PRICE, KO_PRICE, KO_TYPE, KI_PRICE, KI_TYPE, ");
+        mergeSql.append("   YIELD_PCT, KO_PRICE, KO_TYPE, KI_PRICE, KI_TYPE, ");
         mergeSql.append("   ISSUE_DATE, FINAL_VALUATION_DATE, MATURITY_DATE) ");
         mergeSql.append("VALUES ");
         mergeSql.append("  (:bondId, ").append(sTradeDate).append(", :ufPct, :ib, :prodType, :tenor, :currency, ");
-        mergeSql.append("   :yieldPct, :strikePrice, :koPrice, :koType, :kiPrice, :kiType, ");
+        mergeSql.append("   :yieldPct, :koPrice, :koType, :kiPrice, :kiType, ");
         mergeSql.append("   ").append(sIssueDate).append(", ").append(sFinalValDate).append(", ").append(sMaturityDate).append(")");
 
         this.exeUpdateForMap(mergeSql.toString(), params);
@@ -182,7 +180,7 @@ public class PMS435 extends FubonWmsBizLogic {
         }
 
         // 理專：允許逗號分隔多位
-        String rmRaw = safeGet(cols, 26);
+        String rmRaw = safeGet(cols, 25);
         if (StringUtils.isNotBlank(rmRaw)) {
             String rmSql = "INSERT INTO ELN_RM_MAPPING (BOND_ID, RM_ID) VALUES (:bondId, :rmId)";
             for (String rmId : rmRaw.split(",")) {
