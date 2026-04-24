@@ -4,8 +4,12 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import com.systex.jbranch.fubon.commons.FubonWmsBizLogic;
+import com.systex.jbranch.fubon.commons.CSVUtil;
+import com.systex.jbranch.platform.common.errHandle.APException;
 import com.systex.jbranch.platform.common.errHandle.JBranchException;
+import com.systex.jbranch.platform.server.bizLogic.sysvariant.SysInfo;
 import com.systex.jbranch.platform.util.IPrimitiveMap;
+import com.systex.jbranch.platform.util.SystemVariableConsts;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,7 +24,7 @@ public class PMS435 extends FubonWmsBizLogic {
     // =========================================================
     // 【CSV 批次匯入】PRD230 標準 — MERGE + Delete-Insert
     //
-    // CSV 欄位索引對應（BIG5 編碼，由前端 TextDecoder 解碼後傳入）：
+    // CSV 欄位索引對應（BIG5 編碼，由 CSVUtil.getBig5CSVFile 轉碼解析）：
     //   0  債券代號   1  交易日      2  UF%     3  IB       4  商品類型
     //   5  天期(月)   6  幣別        7  標的1    8  標的1進場價  9  標的2
     //  10  標的2進場  11 標的3      12 標的3進場  13 標的4   14 標的4進場
@@ -32,55 +36,47 @@ public class PMS435 extends FubonWmsBizLogic {
     public void importCSV(Object body, IPrimitiveMap header) throws JBranchException {
         try {
             PMS435InputVO vo = (PMS435InputVO) body;
-            String csvContent = vo.getCsv_content();
 
-            if (StringUtils.isBlank(csvContent)) {
-                throw new Exception("CSV 內容不可為空");
+            // 第一步：取得暫存路徑，以 BIG5 轉碼讀取上傳檔案
+            String tempPath = (String) SysInfo.getInfoValue(SystemVariableConsts.TEMP_PATH);
+            List<String[]> csvList = CSVUtil.getBig5CSVFile(tempPath, vo.getFileName());
+
+            if (csvList == null || csvList.isEmpty()) {
+                throw new APException("上傳檔案為空，請確認 CSV 內容");
             }
 
-            // 依換行分割，過濾空白列
-            String[] rawLines = csvContent.split("\r?\n");
-            List<String> lines = new ArrayList<>();
-            for (String l : rawLines) {
-                if (StringUtils.isNotBlank(l)) lines.add(l);
-            }
+            Set<String> idList    = new HashSet<>();
+            int         successCount = 0;
+            int         failCount    = 0;
+            List<String> errors      = new ArrayList<>();
 
-            if (lines.size() < 2) {
-                throw new Exception("CSV 至少需要標題列與一筆資料");
-            }
+            for (int i = 0; i < csvList.size(); i++) {
+                String[] str = csvList.get(i);
 
-            // 防呆：驗證第一欄標題
-            String[] headerRow = parseCsvLine(lines.get(0));
-            if (headerRow.length == 0 || !"債券代號".equals(headerRow[0].trim())) {
-                throw new Exception("CSV 格式錯誤：第一欄應為「債券代號」，請確認檔案格式與編碼");
-            }
-
-            // 檔案內防重：HashSet 檢核同一檔案內是否有重複 BOND_ID
-            Set<String> seenBondIds = new HashSet<>();
-            int successCount = 0;
-            int failCount = 0;
-            List<String> errors = new ArrayList<>();
-
-            for (int i = 1; i < lines.size(); i++) {
-                String[] cols = parseCsvLine(lines.get(i));
-                if (cols.length < 1) continue;
-
-                String bondId = cols[0].trim();
-                if (StringUtils.isBlank(bondId)) {
-                    failCount++;
-                    errors.add("第 " + (i + 1) + " 列：債券代號為空，略過");
+                // 第二步：檔頭防呆驗證（i == 0）
+                if (i == 0) {
+                    if (str.length < 2
+                            || !"債券代號".equals(str[0].trim())
+                            || !"交易日".equals(str[1].trim())) {
+                        throw new APException("上傳格式錯誤，請下載範例檔案");
+                    }
                     continue;
                 }
 
-                if (seenBondIds.contains(bondId)) {
+                // 第三步：空值跳過 + 檔案內防重
+                if (StringUtils.isBlank(str[0])) continue;
+
+                String bondId = str[0].trim();
+                if (idList.contains(bondId)) {
                     failCount++;
                     errors.add("第 " + (i + 1) + " 列 (" + bondId + ")：檔案內重複，略過");
                     continue;
                 }
-                seenBondIds.add(bondId);
+                idList.add(bondId);
 
+                // 第四~五步：型態轉換 + MERGE / Delete-Insert
                 try {
-                    processSingleRow(bondId, cols);
+                    processSingleRow(bondId, str);
                     successCount++;
                 } catch (Exception e) {
                     failCount++;
@@ -94,6 +90,8 @@ public class PMS435 extends FubonWmsBizLogic {
             outputVO.setImportErrors(errors);
             this.sendRtnObject(outputVO);
 
+        } catch (APException ape) {
+            throw ape;
         } catch (Exception e) {
             e.printStackTrace();
             throw new JBranchException("ERR_PMS435_IMPORT", "CSV 匯入失敗：" + e.getMessage());
@@ -460,27 +458,4 @@ public class PMS435 extends FubonWmsBizLogic {
         return "NULL";
     }
 
-    // 簡易 CSV 行解析（支援雙引號包覆欄位）
-    private String[] parseCsvLine(String line) {
-        List<String> fields = new ArrayList<>();
-        StringBuilder cur = new StringBuilder();
-        boolean inQuote = false;
-        for (int i = 0; i < line.length(); i++) {
-            char c = line.charAt(i);
-            if (c == '"') {
-                if (inQuote && i + 1 < line.length() && line.charAt(i + 1) == '"') {
-                    cur.append('"'); i++;
-                } else {
-                    inQuote = !inQuote;
-                }
-            } else if (c == ',' && !inQuote) {
-                fields.add(cur.toString());
-                cur.setLength(0);
-            } else {
-                cur.append(c);
-            }
-        }
-        fields.add(cur.toString());
-        return fields.toArray(new String[0]);
-    }
 }
